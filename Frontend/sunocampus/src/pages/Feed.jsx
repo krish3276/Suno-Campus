@@ -1,3 +1,11 @@
+import React from 'react'
+import Navbar from "../components/Navbar";
+
 export default function Feed() {
-  return <h1>Campus Feed Page</h1>;
+  return (
+    <>
+      <Navbar/>
+      <h1>Campus Feed Page</h1>
+    </>
+  )
 }

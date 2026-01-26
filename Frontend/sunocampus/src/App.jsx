@@ -8,6 +8,7 @@ import Admin from "./pages/Admin";
 
 function App() {
   return (
+
     <Routes>
       <Route path="/" element={<Feed />} />
       <Route path="/login" element={<Login />} />
