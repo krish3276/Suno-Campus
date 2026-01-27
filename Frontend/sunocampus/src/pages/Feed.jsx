@@ -153,11 +153,11 @@ export default function Feed() {
             </h1>
 
             {/* Error Message */}
-            {error && (
+            {/* {error && (
               <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-2 rounded-lg mb-4 text-sm">
                 ℹ️ {error}
               </div>
-            )}
+            )} */}
 
             {/* Controls Row */}
             <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
@@ -308,7 +308,7 @@ function generateMockPosts(scope) {
       college: scope === 'campus' ? 'MIT' : colleges[i % colleges.length],
     },
     visibility: scope === 'campus' ? 'campus' : i % 2 === 0 ? 'global' : 'campus',
-    image: i % 3 === 0 ? `https://picsum.photos/600/400?random=${i}` : null,
+    // image: i % 3 === 0 ? `https://picsum.photos/600/400?random=${i}` : null,
     likes: Math.floor(Math.random() * 50),
     comments: Math.floor(Math.random() * 20),
     createdAt: new Date(Date.now() - i * 3600000).toISOString(),
