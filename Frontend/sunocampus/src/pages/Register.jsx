@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -138,10 +139,12 @@ export default function Register() {
 
               {/* Button */}
               <div className="flex justify-center pt-3">
-                <button
-                  type="submit" className="px-6 py-2 bg-gray-600 text-white hover:bg-gray-700 rounded-md shadow-xl hover:scale-105 transition">
-                  Register
-                </button>
+                <Link to="/login">
+                  <button
+                    type="submit" className="px-6 py-2 bg-gray-600 text-white hover:bg-gray-700 rounded-md shadow-xl hover:scale-105 transition">
+                    Register
+                  </button>
+                </Link>
               </div>
 
             </form>
