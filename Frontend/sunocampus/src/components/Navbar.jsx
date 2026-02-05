@@ -62,7 +62,7 @@ const Navbar = ({ user, notifications = [] }) => {
   const handleLogout = () => {
     // Implement logout logic here
     localStorage.removeItem('token');
-    window.location.href = '/login';
+    window.location.href = '/';
   };
 
   const canCreateEvent = ['Contributor', 'Admin'].includes(currentUser.role);

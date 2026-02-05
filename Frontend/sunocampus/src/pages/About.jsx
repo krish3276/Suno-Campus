@@ -79,10 +79,10 @@ export default function About() {
                 
                 <div className="flex flex-wrap gap-4">
                   <Link
-                    to="/register"
+                    to="/"
                     className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl hover:scale-105"
                   >
-                    Join the Community
+                    Explore Feed
                   </Link>
                   <button className="px-8 py-3 bg-white text-gray-700 rounded-lg font-medium border-2 border-gray-200 hover:border-blue-300 transition-all">
                     Read Our Story
@@ -285,10 +285,10 @@ export default function About() {
               </p>
               <div className="flex flex-wrap gap-4 justify-center">
                 <Link
-                  to="/register"
+                  to="/"
                   className="px-8 py-3 bg-white text-blue-600 rounded-lg font-semibold hover:bg-gray-100 transition-all shadow-lg hover:scale-105"
                 >
-                  Join Community
+                  Explore Feed
                 </Link>
                 <button className="px-8 py-3 bg-transparent text-white rounded-lg font-semibold border-2 border-white hover:bg-white hover:text-blue-600 transition-all">
                   Download App
