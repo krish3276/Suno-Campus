@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { authAPI } from "../services/api";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -53,47 +54,46 @@ export default function Login() {
     setIsLoading(true);
     
     try {
-      // TODO: Replace with actual API call
-      console.log("Login data:", formData);
+      const response = await authAPI.login({
+        email: formData.email,
+        password: formData.password,
+      });
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock response
-      const mockResponse = {
-        success: true,
-        token: "mock-jwt-token",
-        user: {
-          id: "1",
-          name: "John Doe",
-          email: formData.email,
-          role: "student", // student role - can't create posts/events
-          college: "MIT",
-          isVerified: true,
+      if (response.success) {
+        const { user } = response.data;
+        
+        // Check account status
+        if (user.accountStatus === 'pending_email_verification') {
+          setErrors({ submit: `Please verify your email first. Check ${formData.email} for the verification link.` });
+          setIsLoading(false);
+          return;
         }
-      };
-      
-      // Store token and user data
-      localStorage.setItem("token", mockResponse.token);
-      localStorage.setItem("user", JSON.stringify(mockResponse.user));
-      
-      // Check if account is verified
-      if (!mockResponse.user.isVerified) {
-        setErrors({ 
-          submit: "Your account is pending verification. Please check your email and wait for admin approval." 
-        });
-        setIsLoading(false);
-        return;
+        
+        if (user.accountStatus === 'pending_admin_approval') {
+          setErrors({ submit: "Your account is pending admin approval. You'll be notified via email once approved." });
+          setIsLoading(false);
+          return;
+        }
+        
+        if (user.accountStatus === 'rejected') {
+          setErrors({ submit: "Your account application was rejected. Please contact support for more information." });
+          setIsLoading(false);
+          return;
+        }
+        
+        if (user.accountStatus === 'suspended') {
+          setErrors({ submit: "Your account has been suspended. Please contact support." });
+          setIsLoading(false);
+          return;
+        }
+        
+        // Account is verified - redirect to feed
+        alert(`Welcome back, ${user.fullName}!`);
+        navigate("/feed");
       }
-      
-      // Redirect to home/feed
-      navigate("/");
-      
     } catch (error) {
       console.error("Login failed:", error);
-      setErrors({ 
-        submit: error.message || "Invalid email or password. Please try again." 
-      });
+      setErrors({ submit: error.message || "Invalid email or password. Please try again." });
     } finally {
       setIsLoading(false);
     }

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { authAPI } from "../services/api";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -35,6 +36,8 @@ export default function Register() {
     studentIdCard: null,
     collegeIdCard: null,
   });
+  const [loading, setLoading] = useState(false);
+  const [apiError, setApiError] = useState("");
 
   // List of verified college email domains (in real app, fetch from backend)
   const verifiedCollegeDomains = [
@@ -205,29 +208,45 @@ export default function Register() {
       return;
     }
     
+    setLoading(true);
+    setApiError("");
+    
     // Create FormData for file upload
     const submitData = new FormData();
-    Object.keys(formData).forEach(key => {
-      if (formData[key] !== null && key !== 'confirmPassword') {
-        submitData.append(key, formData[key]);
-      }
-    });
+    
+    // Map frontend field names to backend expected names
+    submitData.append('fullName', formData.fullName);
+    submitData.append('email', formData.email);
+    submitData.append('phone', formData.phoneNumber);
+    submitData.append('password', formData.password);
+    submitData.append('dateOfBirth', formData.dateOfBirth);
+    submitData.append('gender', formData.gender);
+    submitData.append('collegeName', formData.collegeName);
+    submitData.append('studentId', formData.studentId);
+    submitData.append('department', formData.branch);
+    submitData.append('yearOfStudy', formData.yearOfStudy);
+    submitData.append('enrollmentYear', formData.graduationYear);
+    
+    // Append files
+    if (formData.studentIdCard) {
+      submitData.append('studentIdCard', formData.studentIdCard);
+    }
+    if (formData.collegeIdCard) {
+      submitData.append('collegeIdCard', formData.collegeIdCard);
+    }
     
     try {
-      // Call backend API
-      console.log("Registration data:", Object.fromEntries(submitData));
+      const response = await authAPI.register(submitData);
       
-      // TODO: Replace with actual API call
-      // const response = await authAPI.register(submitData);
-      
-      // Show success message
-      alert("Registration successful! Please check your college email to verify your account. Your account will be reviewed by our team.");
-      
-      // Redirect to login
-      navigate("/login");
+      if (response.success) {
+        alert(`Registration successful! Please check your college email (${formData.email}) to verify your account. Your account will be reviewed by our admin team.`);
+        navigate("/login");
+      }
     } catch (error) {
       console.error("Registration failed:", error);
-      setErrors({ submit: error.message || "Registration failed. Please try again." });
+      setApiError(error.message || "Registration failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -269,6 +288,13 @@ export default function Register() {
         </div>
 
         <form onSubmit={handleSubmit} className="p-8">
+          {/* API Error Message */}
+          {apiError && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-800 text-sm font-medium">{apiError}</p>
+            </div>
+          )}
+          
           {/* Step 1: Personal Details */}
           {step === 1 && (
             <div className="space-y-5">
@@ -663,9 +689,12 @@ export default function Register() {
             ) : (
               <button
                 type="submit"
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-colors shadow-lg"
+                disabled={loading}
+                className={`flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-colors shadow-lg ${
+                  loading ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
               >
-                Complete Registration
+                {loading ? 'Submitting...' : 'Complete Registration'}
               </button>
             )}
           </div>

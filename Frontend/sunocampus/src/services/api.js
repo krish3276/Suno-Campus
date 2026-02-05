@@ -10,10 +10,14 @@ const getAuthToken = () => {
 const apiCall = async (url, options = {}) => {
   const token = getAuthToken();
   const headers = {
-    'Content-Type': 'application/json',
     ...(token && { Authorization: `Bearer ${token}` }),
     ...options.headers,
   };
+
+  // Don't set Content-Type for FormData (browser will set it with boundary)
+  if (!(options.body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   const config = {
     ...options,
@@ -35,8 +39,72 @@ const apiCall = async (url, options = {}) => {
   }
 };
 
-// Posts API
-export const postsAPI = {
+// Auth API
+export const authAPI = {
+  // Register new student
+  register: async (formData) => {
+    // formData should be a FormData object with all registration fields including files
+    return apiCall('/auth/register', {
+      method: 'POST',
+      body: formData, // FormData object
+    });
+  },
+
+  // Login
+  login: async (credentials) => {
+    const response = await apiCall('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+    });
+    
+    // Store token and user data
+    if (response.success && response.data.token) {
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+    }
+    
+    return response;
+  },
+
+  // Verify email
+  verifyEmail: async (token) => {
+    return apiCall(`/auth/verify-email/${token}`);
+  },
+
+  // Get current user
+  getCurrentUser: async () => {
+    return apiCall('/auth/me');
+  },
+
+  // Logout
+  logout: async () => {
+    const response = await apiCall('/auth/logout', {
+      method: 'POST',
+    });
+    
+    // Clear local storage
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    
+    return response;
+  },
+
+  // Forgot password
+  forgotPassword: async (email) => {
+    return apiCall('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  },
+
+  // Reset password
+  resetPassword: async (token, password) => {
+    return apiCall(`/auth/reset-password/${token}`, {
+      method: 'PUT',
+      body: JSON.stringify({ password }),
+    });
+  },
+};
   // Get posts by scope
   getPosts: async (scope = 'campus', search = '') => {
     const queryParams = new URLSearchParams({ scope });
