@@ -25,7 +25,6 @@ export default function Register() {
     
     // Verification
     studentIdCard: null, // Student ID card upload
-    collegeIdCard: null, // College ID card upload
     
     // Agreement
     agreeToTerms: false,
@@ -34,7 +33,6 @@ export default function Register() {
   const [errors, setErrors] = useState({});
   const [previewImages, setPreviewImages] = useState({
     studentIdCard: null,
-    collegeIdCard: null,
   });
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState("");
@@ -217,29 +215,26 @@ export default function Register() {
     // Map frontend field names to backend expected names
     submitData.append('fullName', formData.fullName);
     submitData.append('email', formData.email);
-    submitData.append('phone', formData.phoneNumber);
+    submitData.append('phoneNumber', formData.phoneNumber);
     submitData.append('password', formData.password);
     submitData.append('dateOfBirth', formData.dateOfBirth);
     submitData.append('gender', formData.gender);
     submitData.append('collegeName', formData.collegeName);
     submitData.append('studentId', formData.studentId);
-    submitData.append('department', formData.branch);
+    submitData.append('branch', formData.branch);
     submitData.append('yearOfStudy', formData.yearOfStudy);
-    submitData.append('enrollmentYear', formData.graduationYear);
+    submitData.append('graduationYear', formData.graduationYear);
     
     // Append files
     if (formData.studentIdCard) {
       submitData.append('studentIdCard', formData.studentIdCard);
-    }
-    if (formData.collegeIdCard) {
-      submitData.append('collegeIdCard', formData.collegeIdCard);
     }
     
     try {
       const response = await authAPI.register(submitData);
       
       if (response.success) {
-        alert(`Registration successful! Please check your college email (${formData.email}) to verify your account. Your account will be reviewed by our admin team.`);
+        alert(`Registration successful! You can now login with your credentials.`);
         navigate("/login");
       }
     } catch (error) {
@@ -578,45 +573,6 @@ export default function Register() {
                   </div>
                 )}
                 {errors.studentIdCard && <p className="text-red-500 text-sm mt-1">{errors.studentIdCard}</p>}
-              </div>
-
-              {/* Optional: College ID Card */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Upload College ID Card (Optional)
-                </label>
-                {!previewImages.collegeIdCard ? (
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
-                    <input
-                      type="file"
-                      name="collegeIdCard"
-                      accept="image/*"
-                      onChange={handleChange}
-                      className="hidden"
-                      id="collegeIdCard"
-                    />
-                    <label htmlFor="collegeIdCard" className="cursor-pointer">
-                      <svg className="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                      </svg>
-                      <p className="text-blue-600 font-medium">Click to upload College ID Card</p>
-                      <p className="text-xs text-gray-500 mt-2">PNG, JPG up to 5MB (Optional for faster verification)</p>
-                    </label>
-                  </div>
-                ) : (
-                  <div className="relative rounded-lg overflow-hidden border-2 border-blue-500">
-                    <img src={previewImages.collegeIdCard} alt="College ID" className="w-full h-64 object-contain bg-gray-50" />
-                    <button
-                      type="button"
-                      onClick={() => removeImage('collegeIdCard')}
-                      className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                )}
               </div>
 
               {/* Verification Process Info */}

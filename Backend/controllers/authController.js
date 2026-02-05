@@ -90,6 +90,10 @@ exports.register = async (req, res) => {
     // Generate email verification token
     const emailVerificationToken = crypto.randomBytes(32).toString("hex");
 
+    // For students, auto-verify them. Contributors need admin approval.
+    const accountStatus = "verified"; // Students are auto-verified
+    const emailVerified = true; // Students can login immediately
+
     // Create user
     const user = await User.create({
       fullName,
@@ -108,7 +112,8 @@ exports.register = async (req, res) => {
       emailVerificationToken,
       emailVerificationExpires: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
       role: "student",
-      accountStatus: "pending_email_verification",
+      accountStatus,
+      emailVerified,
     });
 
     // TODO: Send verification email
@@ -117,10 +122,9 @@ exports.register = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: "Registration successful! Please check your email to verify your account.",
+      message: "Registration successful! You can now login to your account.",
       data: {
         user: user.toPublicJSON(),
-        verificationToken: emailVerificationToken, // Remove in production
       },
     });
   } catch (error) {
@@ -167,12 +171,26 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Check if email is verified
-    if (!user.emailVerified) {
+    // Check account status - only verified users can login
+    if (user.accountStatus !== 'verified') {
+      let message = "Your account is not yet verified";
+      
+      if (user.accountStatus === 'pending_email_verification') {
+        message = "Please verify your email before logging in";
+      } else if (user.accountStatus === 'pending_admin_approval') {
+        message = "Your account is pending admin approval";
+      } else if (user.accountStatus === 'rejected') {
+        message = "Your account application was rejected";
+      } else if (user.accountStatus === 'suspended') {
+        message = "Your account has been suspended";
+      }
+      
       return res.status(403).json({
         success: false,
-        message: "Please verify your email before logging in",
-        accountStatus: user.accountStatus,
+        message,
+        data: {
+          user: user.toPublicJSON(),
+        },
       });
     }
 

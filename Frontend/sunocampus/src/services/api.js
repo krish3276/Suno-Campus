@@ -26,15 +26,32 @@ const apiCall = async (url, options = {}) => {
 
   try {
     const response = await fetch(`${API_BASE_URL}${url}`, config);
-    const data = await response.json();
+    
+    // Check if response has content before parsing JSON
+    const contentType = response.headers.get('content-type');
+    let data;
+    
+    if (contentType && contentType.includes('application/json')) {
+      data = await response.json();
+    } else {
+      // If not JSON, try to get text
+      const text = await response.text();
+      data = { message: text || 'Server error' };
+    }
 
     if (!response.ok) {
-      throw new Error(data.message || 'API request failed');
+      throw new Error(data.message || `Server error: ${response.status}`);
     }
 
     return data;
   } catch (error) {
     console.error('API Error:', error);
+    
+    // Provide more helpful error messages
+    if (error.message.includes('Failed to fetch')) {
+      throw new Error('Cannot connect to server. Please make sure the backend is running on port 5000.');
+    }
+    
     throw error;
   }
 };
@@ -105,6 +122,9 @@ export const authAPI = {
     });
   },
 };
+
+// Posts API
+export const postsAPI = {
   // Get posts by scope
   getPosts: async (scope = 'campus', search = '') => {
     const queryParams = new URLSearchParams({ scope });
@@ -166,27 +186,6 @@ export const authAPI = {
     }
 
     return response.json();
-  },
-};
-
-// Auth API
-export const authAPI = {
-  login: async (credentials) => {
-    return apiCall('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify(credentials),
-    });
-  },
-
-  register: async (userData) => {
-    return apiCall('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify(userData),
-    });
-  },
-
-  getCurrentUser: async () => {
-    return apiCall('/auth/me');
   },
 };
 

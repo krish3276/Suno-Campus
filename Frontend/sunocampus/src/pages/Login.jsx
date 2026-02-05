@@ -62,37 +62,14 @@ export default function Login() {
       if (response.success) {
         const { user } = response.data;
         
-        // Check account status
-        if (user.accountStatus === 'pending_email_verification') {
-          setErrors({ submit: `Please verify your email first. Check ${formData.email} for the verification link.` });
-          setIsLoading(false);
-          return;
-        }
-        
-        if (user.accountStatus === 'pending_admin_approval') {
-          setErrors({ submit: "Your account is pending admin approval. You'll be notified via email once approved." });
-          setIsLoading(false);
-          return;
-        }
-        
-        if (user.accountStatus === 'rejected') {
-          setErrors({ submit: "Your account application was rejected. Please contact support for more information." });
-          setIsLoading(false);
-          return;
-        }
-        
-        if (user.accountStatus === 'suspended') {
-          setErrors({ submit: "Your account has been suspended. Please contact support." });
-          setIsLoading(false);
-          return;
-        }
-        
         // Account is verified - redirect to feed
         alert(`Welcome back, ${user.fullName}!`);
         navigate("/feed");
       }
     } catch (error) {
       console.error("Login failed:", error);
+      
+      // Handle specific error message from backend or use generic message
       setErrors({ submit: error.message || "Invalid email or password. Please try again." });
     } finally {
       setIsLoading(false);
