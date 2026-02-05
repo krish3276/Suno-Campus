@@ -56,7 +56,7 @@ if ($choice -eq "2" -or $choice -eq "3") {
     Write-Host "To manually verify a user after registration, use MongoDB Compass or Atlas UI:" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "Option 1: MongoDB Compass/Atlas (GUI)" -ForegroundColor Green
-    Write-Host "1. Connect to: mongodb+srv://sunocampus:Sunocampus2026@cluster0.sbyamkk.mongodb.net/sunocampus"
+
     Write-Host "2. Navigate to: sunocampus → users collection"
     Write-Host "3. Find user with email: teststudent@gnu.ac.in"
     Write-Host "4. Edit the document and update these fields:"
