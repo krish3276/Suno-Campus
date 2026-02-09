@@ -207,4 +207,50 @@ export const postsAPI = {
   },
 };
 
-export default { postsAPI, authAPI };
+// Events API
+export const eventsAPI = {
+  // Get events with filters
+  getEvents: async (filters = {}) => {
+    const queryParams = new URLSearchParams();
+    
+    Object.keys(filters).forEach(key => {
+      if (filters[key] && filters[key] !== 'all') {
+        queryParams.append(key, filters[key]);
+      }
+    });
+    
+    return apiCall(`/events?${queryParams.toString()}`);
+  },
+
+  // Get single event
+  getEventById: async (id) => {
+    return apiCall(`/events/${id}`);
+  },
+
+  // Get trending events
+  getTrendingEvents: async () => {
+    return apiCall('/events/trending');
+  },
+
+  // Get event statistics
+  getEventStats: async () => {
+    return apiCall('/events/stats');
+  },
+
+  // Register for event
+  registerForEvent: async (eventId) => {
+    return apiCall(`/events/${eventId}/register`, {
+      method: 'POST',
+    });
+  },
+
+  // Create event (for contributors/admins)
+  createEvent: async (eventData) => {
+    return apiCall('/events', {
+      method: 'POST',
+      body: JSON.stringify(eventData),
+    });
+  },
+};
+
+export default { postsAPI, authAPI, eventsAPI };
