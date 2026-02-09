@@ -47,9 +47,6 @@ export default function Feed() {
       setPosts(data.posts || data);
       setFilteredPosts(data.posts || data);
     } catch (error) {
-      console.error('Failed to fetch posts:', error);
-      
-      // Fallback to mock data for development
       const mockPosts = generateMockPosts(scope);
       setPosts(mockPosts);
       setFilteredPosts(mockPosts);
@@ -96,9 +93,6 @@ export default function Feed() {
       // Show success message
       alert('Post created successfully!');
     } catch (error) {
-      console.error('Failed to create post:', error);
-      
-      // Fallback: Add to local state with mock data
       const mockPost = {
         _id: Date.now().toString(),
         content: postData.content,
@@ -126,8 +120,7 @@ export default function Feed() {
         await postsAPI.unlikePost(postId);
       }
     } catch (error) {
-      console.error('Failed to like post:', error);
-      throw error; // Let PostCard handle the error
+      throw error;
     }
   };
 
@@ -151,13 +144,6 @@ export default function Feed() {
                 SunoCampus
               </span>
             </h1>
-
-            {/* Error Message */}
-            {/* {error && (
-              <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-2 rounded-lg mb-4 text-sm">
-                ℹ️ {error}
-              </div>
-            )} */}
 
             {/* Controls Row */}
             <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
@@ -308,7 +294,6 @@ function generateMockPosts(scope) {
       college: scope === 'campus' ? 'MIT' : colleges[i % colleges.length],
     },
     visibility: scope === 'campus' ? 'campus' : i % 2 === 0 ? 'global' : 'campus',
-    // image: i % 3 === 0 ? `https://picsum.photos/600/400?random=${i}` : null,
     likes: Math.floor(Math.random() * 50),
     comments: Math.floor(Math.random() * 20),
     createdAt: new Date(Date.now() - i * 3600000).toISOString(),

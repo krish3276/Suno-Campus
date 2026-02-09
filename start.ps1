@@ -46,9 +46,7 @@ Write-Host ""
 Write-Host "📖 Quick Links:" -ForegroundColor Yellow
 Write-Host "   Register: http://localhost:5173/register" -ForegroundColor White
 Write-Host "   Login:    http://localhost:5173/login" -ForegroundColor White
-Write-Host "   Feed:     http://localhost:5173/feed" -ForegroundColor White
-Write-Host ""
-Write-Host "📚 Read FRONTEND_BACKEND_INTEGRATION.md for testing guide" -ForegroundColor Cyan
+Write-Host "   Home:     http://localhost:5173/" -ForegroundColor White
 Write-Host ""
 Write-Host "Press any key to exit this window (servers will keep running)..."
 $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")

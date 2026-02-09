@@ -94,25 +94,8 @@ const UserSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    emailVerificationToken: String,
-    emailVerificationExpires: Date,
 
-    phoneVerified: {
-      type: Boolean,
-      default: false,
-    },
-    phoneVerificationOTP: String,
-    phoneVerificationExpires: Date,
 
-    // Document URLs (for students)
-    studentIdCardUrl: {
-      type: String,
-      required: function () {
-        return this.role === "student";
-      },
-    },
-    studentIdCardHash: String, // To prevent duplicate ID cards
-    collegeIdCardUrl: String,
 
     // Account Status
     accountStatus: {
@@ -125,12 +108,6 @@ const UserSchema = new mongoose.Schema(
         "suspended",
       ],
       default: "pending_email_verification",
-    },
-    rejectionReason: String,
-    verifiedAt: Date,
-    verifiedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
     },
 
     // Profile

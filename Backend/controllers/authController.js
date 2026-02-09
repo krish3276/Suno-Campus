@@ -67,33 +67,6 @@ exports.register = async (req, res) => {
       });
     }
 
-    // Handle file uploads
-    let studentIdCardUrl = null;
-    let collegeIdCardUrl = null;
-
-    if (req.files) {
-      if (req.files.studentIdCard) {
-        studentIdCardUrl = req.files.studentIdCard[0].path;
-      }
-      if (req.files.collegeIdCard) {
-        collegeIdCardUrl = req.files.collegeIdCard[0].path;
-      }
-    }
-
-    if (!studentIdCardUrl) {
-      return res.status(400).json({
-        success: false,
-        message: "Student ID card is required",
-      });
-    }
-
-    // Generate email verification token
-    const emailVerificationToken = crypto.randomBytes(32).toString("hex");
-
-    // For students, auto-verify them. Contributors need admin approval.
-    const accountStatus = "verified"; // Students are auto-verified
-    const emailVerified = true; // Students can login immediately
-
     // Create user
     const user = await User.create({
       fullName,
@@ -107,18 +80,10 @@ exports.register = async (req, res) => {
       branch,
       yearOfStudy,
       graduationYear,
-      studentIdCardUrl,
-      collegeIdCardUrl,
-      emailVerificationToken,
-      emailVerificationExpires: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
       role: "student",
-      accountStatus,
-      emailVerified,
+      accountStatus: "verified",
+      emailVerified: true,
     });
-
-    // TODO: Send verification email
-    // const verificationUrl = `${process.env.FRONTEND_URL}/verify-email/${emailVerificationToken}`;
-    // await sendEmail({ to: email, subject: "Verify Email", html: verificationUrl });
 
     res.status(201).json({
       success: true,
@@ -218,49 +183,6 @@ exports.login = async (req, res) => {
   }
 };
 
-// @desc    Verify email
-// @route   GET /api/auth/verify-email/:token
-// @access  Public
-exports.verifyEmail = async (req, res) => {
-  try {
-    const { token } = req.params;
-
-    // Find user with valid token
-    const user = await User.findOne({
-      emailVerificationToken: token,
-      emailVerificationExpires: { $gt: Date.now() },
-    });
-
-    if (!user) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid or expired verification token",
-      });
-    }
-
-    // Update user
-    user.emailVerified = true;
-    user.emailVerificationToken = undefined;
-    user.emailVerificationExpires = undefined;
-    user.accountStatus = "pending_admin_approval";
-    await user.save();
-
-    res.status(200).json({
-      success: true,
-      message: "Email verified successfully! Your account will be reviewed by our team.",
-      data: {
-        accountStatus: user.accountStatus,
-      },
-    });
-  } catch (error) {
-    console.error("Email verification error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Error verifying email",
-    });
-  }
-};
-
 // @desc    Get current logged in user
 // @route   GET /api/auth/me
 // @access  Private
@@ -309,16 +231,12 @@ exports.forgotPassword = async (req, res) => {
     // Generate reset token
     const resetToken = crypto.randomBytes(32).toString("hex");
     user.resetPasswordToken = resetToken;
-    user.resetPasswordExpire = Date.now() + 30 * 60 * 1000; // 30 minutes
+    user.resetPasswordExpire = Date.now() + 30 * 60 * 1000;
     await user.save();
-
-    // TODO: Send reset email
-    // const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
 
     res.status(200).json({
       success: true,
       message: "Password reset email sent",
-      resetToken, // Remove in production
     });
   } catch (error) {
     res.status(500).json({

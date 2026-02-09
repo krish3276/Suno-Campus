@@ -5,14 +5,10 @@ A comprehensive campus social networking platform built with **React** and **Nod
 ## ✨ Features
 
 ### 🔐 Authentication System (✅ Fully Integrated)
-- **Multi-step Student Registration** with document verification
+- **Multi-step Student Registration** (3-step process)
 - **College Email Verification** (only verified college domains allowed)
-- **Student ID Card Upload** for identity verification
+- **Auto-verification** on registration with valid college email
 - **JWT-based Authentication** with secure password hashing
-- **Multi-layer Verification Process**:
-  1. Email verification
-  2. Admin approval
-  3. Document validation
 
 ### 👥 User Roles
 - **Students**: View posts/events, participate in discussions
@@ -78,34 +74,22 @@ JWT_EXPIRE=7d
 VITE_API_URL=http://localhost:5000/api
 ```
 
-## 📖 Documentation
-
-- **[Frontend-Backend Integration Guide](FRONTEND_BACKEND_INTEGRATION.md)** - Complete testing and integration guide
-- **[API Documentation](Backend/API_DOCUMENTATION.md)** - All API endpoints with examples
-- **[Database Setup](Backend/DATABASE_SETUP.md)** - MongoDB configuration guide
-- **[Student Verification Strategy](Backend/STUDENT_VERIFICATION_GUIDE.md)** - Verification workflow
-
 ## 🧪 Testing the Application
 
-### 1. Register a Test Student
+### 1. Register a Student
 
-Navigate to `http://localhost:5173/register` and fill in:
-- **Email**: Use a college email domain (e.g., `test@gnu.ac.in`)
-- **Upload**: Student ID card and College ID card
-- Complete all 3 steps
+Navigate to `http://localhost:5173/register` and:
+- **Step 1**: Enter personal details (name, email, password, phone, DOB, gender)
+- **Step 2**: Enter college details (college name, student ID, branch, year)
+- **Step 3**: Accept terms and conditions
+- Use a verified college email domain (e.g., `test@gnu.ac.in`)
 
-### 2. Verify Test User
+### 2. Login
 
-Since email sending isn't implemented yet, manually verify users:
-
-```bash
-cd Backend
-node verify-test-user.js teststudent@gnu.ac.in
-```
-
-### 3. Login
-
-Visit `http://localhost:5173/login` and use your credentials!
+After registration, you can immediately login!
+- Visit `http://localhost:5173/login` 
+- Use your email and password
+- Account is auto-verified for immediate access
 
 ## 🏗️ Tech Stack
 
@@ -120,7 +104,7 @@ Visit `http://localhost:5173/login` and use your credentials!
 - **MongoDB** with **Mongoose 9.1.4**
 - **JWT** for authentication
 - **bcryptjs** for password hashing
-- **multer** for file uploads
+- **CORS** for cross-origin requests
 
 ## 📁 Project Structure
 
@@ -129,10 +113,9 @@ Suno-Campus/
 ├── Backend/
 │   ├── config/          # Database configuration
 │   ├── controllers/     # Request handlers
-│   ├── middlewares/     # Auth, upload, etc.
+│   ├── middlewares/     # Auth middleware
 │   ├── models/          # MongoDB schemas
 │   ├── routes/          # API routes
-│   ├── uploads/         # Uploaded files
 │   └── index.js         # Entry point
 ├── Frontend/
 │   └── sunocampus/
@@ -148,13 +131,7 @@ Suno-Campus/
 ## 🔄 Account Status Flow
 
 ```
-Registration
-    ↓
-pending_email_verification
-    ↓ (email verified)
-pending_admin_approval
-    ↓ (admin approves)
-verified ✅ (can login)
+Registration → verified ✅ (auto-verified, can login immediately)
 ```
 
 ## 🎯 Current Status
@@ -164,10 +141,10 @@ verified ✅ (can login)
 - [x] MongoDB database setup
 - [x] User authentication APIs
 - [x] Frontend-Backend integration
-- [x] File upload system
 - [x] Multi-step registration
 - [x] JWT token management
 - [x] Role-based access control
+- [x] Auto-verification system
 
 ### 🚧 In Progress
 - [ ] Email service integration
@@ -186,8 +163,6 @@ verified ✅ (can login)
 ## 🛠️ Helper Scripts
 
 - **`start.ps1`** - Start both frontend and backend servers
-- **`test-user-helper.ps1`** - Interactive test user creation guide
-- **`Backend/verify-test-user.js`** - Quickly verify test users
 
 ## 🤝 Contributing
 

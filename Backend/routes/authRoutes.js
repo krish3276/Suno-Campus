@@ -1,11 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const upload = require("../middlewares/upload");
 const { protect } = require("../middlewares/auth");
 const {
   register,
   login,
-  verifyEmail,
   getMe,
   logout,
   forgotPassword,
@@ -13,17 +11,8 @@ const {
 } = require("../controllers/authController");
 
 // Public routes
-router.post(
-  "/register",
-  upload.fields([
-    { name: "studentIdCard", maxCount: 1 },
-    { name: "collegeIdCard", maxCount: 1 },
-  ]),
-  register
-);
-
+router.post("/register", register);
 router.post("/login", login);
-router.get("/verify-email/:token", verifyEmail);
 router.post("/forgot-password", forgotPassword);
 router.put("/reset-password/:token", resetPassword);
 

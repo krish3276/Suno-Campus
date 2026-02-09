@@ -66,7 +66,6 @@ const CreatePostModal = ({ isOpen, onClose, onSubmit }) => {
       setImagePreview(null);
       onClose();
     } catch (error) {
-      console.error('Failed to create post:', error);
       alert('Failed to create post. Please try again.');
     } finally {
       setIsSubmitting(false);

@@ -19,10 +19,8 @@ const PostCard = ({ post, onLike, onComment }) => {
     try {
       await onLike(post._id, !isLiked);
     } catch (error) {
-      // Revert on error
       setIsLiked(previousLiked);
       setLikeCount(previousCount);
-      console.error('Failed to like post:', error);
     } finally {
       setIsLiking(false);
     }
@@ -34,7 +32,7 @@ const PostCard = ({ post, onLike, onComment }) => {
         title: `Post by ${post.author?.name}`,
         text: post.content,
         url: window.location.href,
-      }).catch(err => console.log('Share failed:', err));
+      }).catch(() => {});
     } else {
       // Fallback: Copy to clipboard
       navigator.clipboard.writeText(window.location.href);

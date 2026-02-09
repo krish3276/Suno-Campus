@@ -23,17 +23,11 @@ export default function Register() {
     yearOfStudy: "",
     graduationYear: "",
     
-    // Verification
-    studentIdCard: null, // Student ID card upload
-    
     // Agreement
     agreeToTerms: false,
   });
 
   const [errors, setErrors] = useState({});
-  const [previewImages, setPreviewImages] = useState({
-    studentIdCard: null,
-  });
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState("");
 
@@ -49,37 +43,10 @@ export default function Register() {
   ];
 
   const handleChange = (e) => {
-    const { name, value, type, checked, files } = e.target;
+    const { name, value, type, checked } = e.target;
     
     if (type === "checkbox") {
       setFormData({ ...formData, [name]: checked });
-    } else if (type === "file") {
-      const file = files[0];
-      if (file) {
-        // Validate file
-        if (!file.type.startsWith('image/')) {
-          setErrors({ ...errors, [name]: "Please upload an image file" });
-          return;
-        }
-        if (file.size > 5 * 1024 * 1024) {
-          setErrors({ ...errors, [name]: "File size should be less than 5MB" });
-          return;
-        }
-        
-        setFormData({ ...formData, [name]: file });
-        
-        // Create preview
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setPreviewImages({ ...previewImages, [name]: reader.result });
-        };
-        reader.readAsDataURL(file);
-        
-        // Clear error
-        const newErrors = { ...errors };
-        delete newErrors[name];
-        setErrors(newErrors);
-      }
     } else {
       setFormData({ ...formData, [name]: value });
       
@@ -169,10 +136,6 @@ export default function Register() {
   const validateStep3 = () => {
     const newErrors = {};
     
-    if (!formData.studentIdCard) {
-      newErrors.studentIdCard = "Please upload your student ID card";
-    }
-    
     if (!formData.agreeToTerms) {
       newErrors.agreeToTerms = "You must agree to the terms and conditions";
     }
@@ -209,26 +172,20 @@ export default function Register() {
     setLoading(true);
     setApiError("");
     
-    // Create FormData for file upload
-    const submitData = new FormData();
-    
-    // Map frontend field names to backend expected names
-    submitData.append('fullName', formData.fullName);
-    submitData.append('email', formData.email);
-    submitData.append('phoneNumber', formData.phoneNumber);
-    submitData.append('password', formData.password);
-    submitData.append('dateOfBirth', formData.dateOfBirth);
-    submitData.append('gender', formData.gender);
-    submitData.append('collegeName', formData.collegeName);
-    submitData.append('studentId', formData.studentId);
-    submitData.append('branch', formData.branch);
-    submitData.append('yearOfStudy', formData.yearOfStudy);
-    submitData.append('graduationYear', formData.graduationYear);
-    
-    // Append files
-    if (formData.studentIdCard) {
-      submitData.append('studentIdCard', formData.studentIdCard);
-    }
+    // Prepare data for submission
+    const submitData = {
+      fullName: formData.fullName,
+      email: formData.email,
+      phoneNumber: formData.phoneNumber,
+      password: formData.password,
+      dateOfBirth: formData.dateOfBirth,
+      gender: formData.gender,
+      collegeName: formData.collegeName,
+      studentId: formData.studentId,
+      branch: formData.branch,
+      yearOfStudy: formData.yearOfStudy,
+      graduationYear: formData.graduationYear,
+    };
     
     try {
       const response = await authAPI.register(submitData);
@@ -238,17 +195,13 @@ export default function Register() {
         navigate("/login");
       }
     } catch (error) {
-      console.error("Registration failed:", error);
       setApiError(error.message || "Registration failed. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const removeImage = (fieldName) => {
-    setFormData({ ...formData, [fieldName]: null });
-    setPreviewImages({ ...previewImages, [fieldName]: null });
-  };
+
 
   return (
     <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 min-h-screen flex justify-center items-center py-8 px-4">
@@ -523,72 +476,27 @@ export default function Register() {
                   </svg>
                   <div className="text-sm text-blue-800">
                     <p className="font-medium">Verification Required</p>
-                    <p className="mt-1">Your college details will be verified against your college email and ID card in the next step.</p>
+                    <p className="mt-1">Your college details will be verified against your college email in the next step.</p>
                   </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Step 3: Document Upload & Verification */}
+          {/* Step 3: Terms & Conditions */}
           {step === 3 && (
             <div className="space-y-5">
-              <h2 className="text-2xl font-semibold text-gray-800 mb-6">Verification Documents</h2>
+              <h2 className="text-2xl font-semibold text-gray-800 mb-6">Complete Registration</h2>
               
-              {/* Student ID Card Upload */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Upload Student ID Card <span className="text-red-500">*</span>
-                </label>
-                {!previewImages.studentIdCard ? (
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
-                    <input
-                      type="file"
-                      name="studentIdCard"
-                      accept="image/*"
-                      onChange={handleChange}
-                      className="hidden"
-                      id="studentIdCard"
-                    />
-                    <label htmlFor="studentIdCard" className="cursor-pointer">
-                      <svg className="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                      </svg>
-                      <p className="text-blue-600 font-medium">Click to upload Student ID Card</p>
-                      <p className="text-xs text-gray-500 mt-2">PNG, JPG up to 5MB</p>
-                    </label>
-                  </div>
-                ) : (
-                  <div className="relative rounded-lg overflow-hidden border-2 border-blue-500">
-                    <img src={previewImages.studentIdCard} alt="Student ID" className="w-full h-64 object-contain bg-gray-50" />
-                    <button
-                      type="button"
-                      onClick={() => removeImage('studentIdCard')}
-                      className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                )}
-                {errors.studentIdCard && <p className="text-red-500 text-sm mt-1">{errors.studentIdCard}</p>}
-              </div>
-
               {/* Verification Process Info */}
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <div className="flex gap-3">
-                  <svg className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                   </svg>
-                  <div className="text-sm text-yellow-800">
-                    <p className="font-medium">Verification Process</p>
-                    <ul className="mt-2 space-y-1 list-disc list-inside">
-                      <li>Email verification link will be sent to your college email</li>
-                      <li>Our team will verify your ID card within 24-48 hours</li>
-                      <li>You'll receive notification once your account is verified</li>
-                      <li>Until verification, your account will have limited access</li>
-                    </ul>
+                  <div className="text-sm text-blue-800">
+                    <p className="font-medium">Account Verification</p>
+                    <p className="mt-1">You can start using your account immediately after registration. Your college email domain serves as verification of your student status.</p>
                   </div>
                 </div>
               </div>

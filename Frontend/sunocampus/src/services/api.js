@@ -59,11 +59,10 @@ const apiCall = async (url, options = {}) => {
 // Auth API
 export const authAPI = {
   // Register new student
-  register: async (formData) => {
-    // formData should be a FormData object with all registration fields including files
+  register: async (data) => {
     return apiCall('/auth/register', {
       method: 'POST',
-      body: formData, // FormData object
+      body: JSON.stringify(data),
     });
   },
 
@@ -81,11 +80,6 @@ export const authAPI = {
     }
     
     return response;
-  },
-
-  // Verify email
-  verifyEmail: async (token) => {
-    return apiCall(`/auth/verify-email/${token}`);
   },
 
   // Get current user

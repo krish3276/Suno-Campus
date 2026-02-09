@@ -64,12 +64,9 @@ export default function Login() {
         
         // Account is verified - redirect to feed
         alert(`Welcome back, ${user.fullName}!`);
-        navigate("/feed");
+        navigate("/");
       }
     } catch (error) {
-      console.error("Login failed:", error);
-      
-      // Handle specific error message from backend or use generic message
       setErrors({ submit: error.message || "Invalid email or password. Please try again." });
     } finally {
       setIsLoading(false);
