@@ -121,6 +121,16 @@ const UserSchema = new mongoose.Schema(
     resetPasswordToken: String,
     resetPasswordExpire: Date,
 
+    // OTP Verification
+    emailOTP: {
+      type: String,
+      select: false, // Don't return in queries
+    },
+    emailOTPExpire: {
+      type: Date,
+      select: false,
+    },
+
     // Activity Tracking
     lastLogin: Date,
     isActive: {
@@ -168,6 +178,34 @@ UserSchema.methods.generateAuthToken = function () {
       expiresIn: process.env.JWT_EXPIRE || "7d",
     }
   );
+};
+
+// Generate and save OTP for email verification
+UserSchema.methods.generateEmailOTP = function () {
+  // Generate 6-digit OTP
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  
+  // Save OTP (will be hashed by pre-save hook if needed, but for OTP we can store plain)
+  this.emailOTP = otp;
+  
+  // Set expiry to 10 minutes from now
+  this.emailOTPExpire = Date.now() + 10 * 60 * 1000;
+  
+  return otp;
+};
+
+// Verify OTP
+UserSchema.methods.verifyEmailOTP = function (enteredOTP) {
+  // Check if OTP exists and hasn't expired
+  if (!this.emailOTP || !this.emailOTPExpire) {
+    return false;
+  }
+  
+  if (Date.now() > this.emailOTPExpire) {
+    return false; // OTP expired
+  }
+  
+  return this.emailOTP === enteredOTP;
 };
 
 // Method to get public profile (without sensitive data)

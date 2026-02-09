@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const crypto = require("crypto");
+const { sendOTPEmail, sendWelcomeEmail } = require("../services/emailService");
 
 // @desc    Register a new student
 // @route   POST /api/auth/register
@@ -67,7 +68,7 @@ exports.register = async (req, res) => {
       });
     }
 
-    // Create user
+    // Create user with pending email verification status
     const user = await User.create({
       fullName,
       email,
@@ -81,15 +82,31 @@ exports.register = async (req, res) => {
       yearOfStudy,
       graduationYear,
       role: "student",
-      accountStatus: "verified",
-      emailVerified: true,
+      accountStatus: "pending_email_verification",
+      emailVerified: false,
     });
+
+    // Generate OTP
+    const otp = user.generateEmailOTP();
+    await user.save();
+
+    // Send OTP email
+    try {
+      await sendOTPEmail(email, otp, fullName);
+    } catch (emailError) {
+      console.error("Email sending failed:", emailError);
+      // Continue even if email fails - OTP is still in database
+    }
 
     res.status(201).json({
       success: true,
-      message: "Registration successful! You can now login to your account.",
+      message: "Registration successful! Please check your college email for the OTP to verify your account.",
       data: {
-        user: user.toPublicJSON(),
+        userId: user._id,
+        email: user.email,
+        fullName: user.fullName,
+        otpSent: true,
+        expiresIn: "10 minutes",
       },
     });
   } catch (error) {
@@ -280,6 +297,147 @@ exports.resetPassword = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error resetting password",
+    });
+  }
+};
+
+// @desc    Verify email OTP
+// @route   POST /api/auth/verify-otp
+// @access  Public
+exports.verifyOTP = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide email and OTP",
+      });
+    }
+
+    // Find user and include OTP fields
+    const user = await User.findOne({ email })
+      .select("+emailOTP +emailOTPExpire");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Check if already verified
+    if (user.emailVerified) {
+      return res.status(400).json({
+        success: false,
+        message: "Email already verified. You can login now.",
+      });
+    }
+
+    // Verify OTP
+    const isOTPValid = user.verifyEmailOTP(otp);
+
+    if (!isOTPValid) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired OTP. Please request a new one.",
+      });
+    }
+
+    // Update user status
+    user.emailVerified = true;
+    user.accountStatus = "verified"; // Auto-verify for college emails
+    user.emailOTP = undefined;
+    user.emailOTPExpire = undefined;
+    await user.save();
+
+    // Send welcome email
+    try {
+      await sendWelcomeEmail(user.email, user.fullName);
+    } catch (emailError) {
+      console.error("Welcome email failed:", emailError);
+      // Don't fail the verification if welcome email fails
+    }
+
+    // Generate token for immediate login
+    const token = user.generateAuthToken();
+
+    res.status(200).json({
+      success: true,
+      message: "Email verified successfully! You can now login.",
+      data: {
+        token,
+        user: user.toPublicJSON(),
+      },
+    });
+  } catch (error) {
+    console.error("OTP verification error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error verifying OTP",
+    });
+  }
+};
+
+// @desc    Resend OTP
+// @route   POST /api/auth/resend-otp
+// @access  Public
+exports.resendOTP = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide email address",
+      });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Check if already verified
+    if (user.emailVerified) {
+      return res.status(400).json({
+        success: false,
+        message: "Email already verified. You can login now.",
+      });
+    }
+
+    // Generate new OTP
+    const otp = user.generateEmailOTP();
+    await user.save();
+
+    // Send OTP email
+    try {
+      await sendOTPEmail(email, otp, user.fullName);
+    } catch (emailError) {
+      console.error("Email sending failed:", emailError);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to send OTP email. Please try again later.",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "OTP has been resent to your email",
+      data: {
+        email: user.email,
+        expiresIn: "10 minutes",
+      },
+    });
+  } catch (error) {
+    console.error("Resend OTP error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error resending OTP",
     });
   }
 };

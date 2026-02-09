@@ -115,6 +115,30 @@ export const authAPI = {
       body: JSON.stringify({ password }),
     });
   },
+
+  // Verify OTP
+  verifyOTP: async (email, otp) => {
+    const response = await apiCall('/auth/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email, otp }),
+    });
+    
+    // Store token and user data if verification successful
+    if (response.success && response.data.token) {
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+    }
+    
+    return response;
+  },
+
+  // Resend OTP
+  resendOTP: async (email) => {
+    return apiCall('/auth/resend-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  },
 };
 
 // Posts API

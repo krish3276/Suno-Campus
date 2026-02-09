@@ -8,10 +8,14 @@ const {
   logout,
   forgotPassword,
   resetPassword,
+  verifyOTP,
+  resendOTP,
 } = require("../controllers/authController");
 
 // Public routes
 router.post("/register", register);
+router.post("/verify-otp", verifyOTP);
+router.post("/resend-otp", resendOTP);
 router.post("/login", login);
 router.post("/forgot-password", forgotPassword);
 router.put("/reset-password/:token", resetPassword);

@@ -12,9 +12,11 @@ http://localhost:5000/api/auth
 ### **1. Register Student**
 **POST** `/api/auth/register`
 
-**Content-Type:** `multipart/form-data`
+**Description:** Register a new student and send OTP to college email for verification.
 
-**Body (Form Data):**
+**Content-Type:** `application/json`
+
+**Body:**
 ```javascript
 {
   // Personal Information
@@ -30,11 +32,7 @@ http://localhost:5000/api/auth
   studentId: "2021BCS001",
   branch: "Computer Science",
   yearOfStudy: 3,
-  graduationYear: 2025,
-  
-  // Files
-  studentIdCard: <file>,  // Image file
-  collegeIdCard: <file>   // Image file (optional)
+  graduationYear: 2025
 }
 ```
 
@@ -42,23 +40,105 @@ http://localhost:5000/api/auth
 ```json
 {
   "success": true,
-  "message": "Registration successful! Please check your email to verify your account.",
+  "message": "Registration successful! Please check your college email for the OTP to verify your account.",
   "data": {
+    "userId": "64a7f8b2c3d4e5f6g7h8i9j0",
+    "email": "krishsirsath21@gnu.ac.in",
+    "fullName": "Krishna Sirsath",
+    "otpSent": true,
+    "expiresIn": "10 minutes"
+  }
+}
+```
+
+**Error Responses:**
+- `400` - Missing required fields, email already registered, invalid college domain
+- `500` - Server error
+
+**Notes:**
+- OTP will be sent to the provided college email
+- User status: `pending_email_verification`
+- User cannot login until OTP is verified
+
+---
+
+### **2. Verify OTP**
+**POST** `/api/auth/verify-otp`
+
+**Description:** Verify the OTP sent to college email and activate the account.
+
+**Body:**
+```json
+{
+  "email": "krishsirsath21@gnu.ac.in",
+  "otp": "123456"
+}
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "message": "Email verified successfully! You can now login.",
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
     "user": {
       "id": "...",
       "fullName": "Krishna Sirsath",
       "email": "krishsirsath21@gnu.ac.in",
       "role": "student",
-      "accountStatus": "pending_email_verification"
-    },
-    "verificationToken": "..."
+      "collegeName": "Gitam University",
+      "accountStatus": "verified",
+      "emailVerified": true
+    }
   }
 }
 ```
 
+**Error Responses:**
+- `400` - Invalid or expired OTP, email already verified
+- `404` - User not found
+- `500` - Server error
+
+**Notes:**
+- OTP is valid for 10 minutes
+- After verification, user is automatically logged in with a token
+- User status changes to `verified`
+
 ---
 
-### **2. Login**
+### **3. Resend OTP**
+**POST** `/api/auth/resend-otp`
+
+**Description:** Resend OTP to the college email if expired or not received.
+
+**Body:**
+```json
+{
+  "email": "krishsirsath21@gnu.ac.in"
+}
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "message": "OTP has been resent to your email",
+  "data": {
+    "email": "krishsirsath21@gnu.ac.in",
+    "expiresIn": "10 minutes"
+  }
+}
+```
+
+**Error Responses:**
+- `400` - Email already verified
+- `404` - User not found
+- `500` - Failed to send OTP email
+
+---
+
+### **4. Login**
 **POST** `/api/auth/login`
 
 **Body:**
@@ -204,15 +284,36 @@ Authorization: Bearer <your_token>
 
 ## 🧪 **Testing with Postman/Thunder Client**
 
-### **Test Registration:**
+### **Test Registration with OTP:**
 
-1. Create new POST request to: `http://localhost:5000/api/auth/register`
-2. Select Body → form-data
-3. Add all text fields (fullName, email, password, etc.)
-4. Add file fields:
-   - Key: `studentIdCard`, Type: File, Value: Select an image
-   - Key: `collegeIdCard`, Type: File, Value: Select an image
-5. Send request
+1. **Register:**
+   - Create POST request to: `http://localhost:5000/api/auth/register`
+   - Select Body → raw → JSON
+   - Add registration data with college email
+   - Send request
+   - Save the `userId` and check console/email for OTP
+
+2. **Verify OTP:**
+   - Create POST request to: `http://localhost:5000/api/auth/verify-otp`
+   - Body:
+   ```json
+   {
+     "email": "krishsirsath21@gnu.ac.in",
+     "otp": "123456"
+   }
+   ```
+   - Send request
+   - Copy the `token` from response
+
+3. **Resend OTP (if needed):**
+   - Create POST request to: `http://localhost:5000/api/auth/resend-otp`
+   - Body:
+   ```json
+   {
+     "email": "krishsirsath21@gnu.ac.in"
+   }
+   ```
+   - Check console/email for new OTP
 
 ### **Test Login:**
 
@@ -240,31 +341,35 @@ Authorization: Bearer <your_token>
 ## 🔐 **Account Status Flow**
 
 ```
-Registration
+Registration (with college email)
     ↓
-pending_email_verification (can't login)
+pending_email_verification (OTP sent)
     ↓
-[Click email verification link]
+[User enters OTP]
     ↓
-pending_admin_approval (limited access)
-    ↓
-[Admin approves]
-    ↓
-verified (full access)
+verified (can login and use platform)
 ```
+
+**Updated Flow:**
+1. User registers with college email → OTP sent to email
+2. User receives 6-digit OTP (valid for 10 minutes)
+3. User verifies OTP → Account activated
+4. User can immediately login (token provided after verification)
 
 ---
 
 ## ✅ **What Works Now:**
 
-- ✅ Student registration with file upload
+- ✅ Student registration with OTP verification
 - ✅ Email validation (college domain check)
+- ✅ OTP generation and sending (6-digit, 10-minute validity)
+- ✅ Email OTP verification
+- ✅ Resend OTP functionality
 - ✅ Duplicate checking (email, phone, studentId)
 - ✅ Password hashing (bcrypt)
 - ✅ JWT token generation
 - ✅ Login with token
 - ✅ Protected routes
-- ✅ Email verification (manual token for now)
 - ✅ Password reset flow
 - ✅ Account status management
 
