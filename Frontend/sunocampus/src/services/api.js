@@ -237,6 +237,11 @@ export const eventsAPI = {
     return apiCall('/events/stats');
   },
 
+  // Get upcoming deadlines
+  getUpcomingDeadlines: async () => {
+    return apiCall('/events/deadlines');
+  },
+
   // Register for event
   registerForEvent: async (eventId) => {
     return apiCall(`/events/${eventId}/register`, {
@@ -253,4 +258,62 @@ export const eventsAPI = {
   },
 };
 
-export default { postsAPI, authAPI, eventsAPI };
+// Contributor Application API
+export const contributorAPI = {
+  // Submit application
+  submitApplication: async (formData) => {
+    const data = new FormData();
+    data.append('reasonForApplying', formData.reasonForApplying);
+    if (formData.experience) {
+      data.append('experience', formData.experience);
+    }
+    data.append('collegeIdCard', formData.collegeIdCard);
+    data.append('authorityLetter', formData.authorityLetter);
+
+    return apiCall('/contributor/apply', {
+      method: 'POST',
+      body: data,
+    });
+  },
+
+  // Get my application
+  getMyApplication: async () => {
+    return apiCall('/contributor/my-application');
+  },
+
+  // Admin: Get all applications
+  getAllApplications: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiCall(`/contributor/applications${queryString ? '?' + queryString : ''}`);
+  },
+
+  // Admin: Get application by ID
+  getApplicationById: async (id) => {
+    return apiCall(`/contributor/applications/${id}`);
+  },
+
+  // Admin: Approve application
+  approveApplication: async (id, comments = '') => {
+    return apiCall(`/contributor/applications/${id}/approve`, {
+      method: 'PUT',
+      body: JSON.stringify({ comments }),
+    });
+  },
+
+  // Admin: Reject application
+  rejectApplication: async (id, rejectionReason, comments = '') => {
+    return apiCall(`/contributor/applications/${id}/reject`, {
+      method: 'PUT',
+      body: JSON.stringify({ rejectionReason, comments }),
+    });
+  },
+
+  // Admin: Delete application
+  deleteApplication: async (id) => {
+    return apiCall(`/contributor/applications/${id}`, {
+      method: 'DELETE',
+    });
+  },
+};
+
+export default { postsAPI, authAPI, eventsAPI, contributorAPI };

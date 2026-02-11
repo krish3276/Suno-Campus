@@ -13,33 +13,9 @@ export default function Feed() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
-  const [trendingEvents, setTrendingEvents] = useState([
-    {
-      title: 'Hackathon 2026',
-      date: 'Tomorrow',
-      location: 'IIT Delhi',
-      enrolled: '500'
-    },
-    {
-      title: 'Cultural Fest',
-      date: 'in 3 days',
-      location: 'VIT Chennai',
-      enrolled: '1200'
-    }
-  ]);
-  const [upcomingDeadlines, setUpcomingDeadlines] = useState([
-    {
-      title: 'Tech Workshop',
-      deadline: 'Registration closes in 6 hours'
-    },
-    {
-      title: 'Sports Meet',
-      deadline: 'Registration closes today!'
-    }
-  ]);
+  const [trendingEvents, setTrendingEvents] = useState([]);
+  const [upcomingDeadlines, setUpcomingDeadlines] = useState([]);
   const [error, setError] = useState(null);
-
-  console.log('[Feed] Component rendered - Posts:', posts.length, 'Loading:', isLoading);
 
   // Mock user data - Replace with actual auth context/API call
   useEffect(() => {
@@ -349,13 +325,44 @@ export default function Feed() {
                 </svg>
                 <h3 className="text-xl font-semibold text-gray-700 mb-2">No posts found</h3>
                 <p className="text-gray-500">
-                  {searchQuery
-                    ? 'Try adjusting your search terms'
-                    : scope === 'campus'
-                    ? 'No posts in your campus yet'
-                    : 'No posts available yet'}
-                </p>
-              </div>
+      verified: i % 3 === 0,
+    },
+    visibility: scope === 'campus' ? 'campus' : i % 2 === 0 ? 'global' : 'campus',
+    likes: Math.floor(Math.random() * 50),
+    comments: Math.floor(Math.random() * 20),
+    createdAt: new Date(Date.now() - i * 3600000).toISOString(),
+    isLikedByCurrentUser: i % 4 === 0,
+  }));
+}
+
+function getMockTrendingEvents() {
+  return [
+    {
+      title: 'Hackathon 2026',
+      date: 'Tomorrow',
+      location: 'IIT Delhi',
+      enrolled: '500'
+    },
+    {
+      title: 'Cultural Fest',
+      date: 'in 3 days',
+      location: 'VIT Chennai',
+      enrolled: '1200'
+    }
+  ];
+}
+
+function getMockUpcomingDeadlines() {
+  return [
+    {
+      title: 'Tech Workshop',
+      deadline: 'Registration closes in 6 hours'
+    },
+    {
+      title: 'Sports Meet',
+      deadline: 'Registration closes today!'
+    }
+  ]         </div>
             )}
 
             {/* Posts Feed */}
@@ -451,7 +458,6 @@ function generateMockPosts(scope) {
     author: {
       name: names[i % names.length],
       college: scope === 'campus' ? 'MIT' : colleges[i % colleges.length],
-      verified: i % 3 === 0,
     },
     visibility: scope === 'campus' ? 'campus' : i % 2 === 0 ? 'global' : 'campus',
     likes: Math.floor(Math.random() * 50),
@@ -459,34 +465,4 @@ function generateMockPosts(scope) {
     createdAt: new Date(Date.now() - i * 3600000).toISOString(),
     isLikedByCurrentUser: i % 4 === 0,
   }));
-}
-
-function getMockTrendingEvents() {
-  return [
-    {
-      title: 'Hackathon 2026',
-      date: 'Tomorrow',
-      location: 'IIT Delhi',
-      enrolled: '500'
-    },
-    {
-      title: 'Cultural Fest',
-      date: 'in 3 days',
-      location: 'VIT Chennai',
-      enrolled: '1200'
-    }
-  ];
-}
-
-function getMockUpcomingDeadlines() {
-  return [
-    {
-      title: 'Tech Workshop',
-      deadline: 'Registration closes in 6 hours'
-    },
-    {
-      title: 'Sports Meet',
-      deadline: 'Registration closes today!'
-    }
-  ];
 }
