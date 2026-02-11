@@ -1,25 +1,45 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import ApplyContributorModal from '../components/ApplyContributorModal';
-import { contributorAPI } from '../services/api';
+import EditProfileModal from '../components/EditProfileModal';
+import ChangePasswordModal from '../components/ChangePasswordModal';
+import { contributorAPI, profileAPI } from '../services/api';
 
 export default function Profile() {
   const [user, setUser] = useState(null);
   const [application, setApplication] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    loadUserData();
+    loadUserProfile();
     checkApplication();
   }, []);
 
-  const loadUserData = () => {
-    // Get user from localStorage (should be set during login)
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      setUser(JSON.parse(userData));
+  // Fetch user profile from backend (secure)
+  const loadUserProfile = async () => {
+    try {
+      setIsLoading(true);
+      const response = await profileAPI.getProfile();
+      if (response.success) {
+        setUser(response.data);
+        // Update localStorage for consistency
+        localStorage.setItem('user', JSON.stringify(response.data));
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error);
+      setError(error.message);
+      // If token is invalid, redirect to login
+      if (error.message.includes('Not authorized') || error.message.includes('Invalid token')) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -56,6 +76,64 @@ export default function Profile() {
     }
   };
 
+  const handleUpdateProfile = async (formData) => {
+    try {
+      setError(null);
+      const response = await profileAPI.updateProfile(formData);
+      
+      if (response.success) {
+        setUser(response.data);
+        localStorage.setItem('user', JSON.stringify(response.data));
+        alert('Profile updated successfully!');
+      }
+    } catch (error) {
+      setError(error.message);
+      alert(error.message || 'Failed to update profile');
+      throw error;
+    }
+  };
+
+  const handleChangePassword = async (currentPassword, newPassword) => {
+    try {
+      const response = await profileAPI.changePassword(currentPassword, newPassword);
+      
+      if (response.success) {
+        alert('Password changed successfully!');
+      }
+    } catch (error) {
+      throw new Error(error.message || 'Failed to change password');
+    }
+  };
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file size (2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Image size must be less than 2MB');
+      return;
+    }
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      alert('Only JPEG, PNG, and GIF images are allowed');
+      return;
+    }
+
+    try {
+      const response = await profileAPI.uploadAvatar(file);
+      if (response.success) {
+        // Reload profile to get updated avatar
+        loadUserProfile();
+        alert('Avatar uploaded successfully!');
+      }
+    } catch (error) {
+      alert(error.message || 'Failed to upload avatar');
+    }
+  };
+
   const getStatusBadge = (status) => {
     const styles = {
       pending: 'bg-yellow-100 text-yellow-800 border-yellow-300',
@@ -83,67 +161,129 @@ export default function Profile() {
       <Navbar />
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-4xl mx-auto px-4">
-          {/* Profile Header */}
-          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-            <div className="flex items-center gap-4">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                {user?.fullName?.charAt(0) || 'U'}
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">{user?.fullName || 'User'}</h1>
-                <p className="text-gray-600">{user?.email}</p>
-                <div className="flex gap-2 mt-2">
-                  <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
-                    {user?.role || 'student'}
-                  </span>
-                  {user?.emailVerified && (
-                    <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-                      Verified
-                    </span>
-                  )}
-                </div>
-              </div>
+          {isLoading ? (
+            <div className="text-center py-12">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              <p className="text-gray-600 mt-4">Loading profile...</p>
             </div>
-          </div>
+          ) : (
+            <>
+              {/* Profile Header */}
+              <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-4">
+                    <div className="relative group">
+                      {user?.avatar ? (
+                        <img
+                          src={`http://localhost:5000/${user.avatar}`}
+                          alt={user.fullName}
+                          className="w-20 h-20 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                          {user?.fullName?.charAt(0) || 'U'}
+                        </div>
+                      )}
+                      <label
+                        htmlFor="avatar-upload"
+                        className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                      >
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                      </label>
+                      <input
+                        type="file"
+                        id="avatar-upload"
+                        accept="image/*"
+                        onChange={handleAvatarUpload}
+                        className="hidden"
+                      />
+                    </div>
+                    <div>
+                      <h1 className="text-2xl font-bold text-gray-900">{user?.fullName || 'User'}</h1>
+                      <p className="text-gray-600">{user?.email}</p>
+                      <div className="flex gap-2 mt-2">
+                        <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium capitalize">
+                          {user?.role || 'student'}
+                        </span>
+                        {user?.emailVerified && (
+                          <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                            ✓ Verified
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setIsEditModalOpen(true)}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Edit Profile
+                    </button>
+                    <button
+                      onClick={() => setIsPasswordModalOpen(true)}
+                      className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                      Change Password
+                    </button>
+                  </div>
+                </div>
 
-          {/* User Details */}
-          {user?.collegeName && (
-            <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">College Information</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-600">College</p>
-                  <p className="font-medium text-gray-900">{user.collegeName}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Student ID</p>
-                  <p className="font-medium text-gray-900">{user.studentId}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Branch</p>
-                  <p className="font-medium text-gray-900">{user.branch}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Year of Study</p>
-                  <p className="font-medium text-gray-900">Year {user.yearOfStudy}</p>
-                </div>
+                {/* Bio */}
+                {user?.bio && (
+                  <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                    <p className="text-gray-700">{user.bio}</p>
+                  </div>
+                )}
               </div>
-            </div>
-          )}
 
-          {/* Contributor Application Section - Only for Students */}
-          {user?.role === 'student' && (
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900">Become a Contributor</h2>
-                  <p className="text-gray-600 mt-1">
-                    Apply to manage events and create posts for your campus
-                  </p>
+              {/* User Details */}
+              {user?.collegeName && (
+                <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+                  <h2 className="text-xl font-bold text-gray-900 mb-4">College Information</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-600">College</p>
+                      <p className="font-medium text-gray-900">{user.collegeName}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Student ID</p>
+                      <p className="font-medium text-gray-900">{user.studentId}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Branch</p>
+                      <p className="font-medium text-gray-900">{user.branch}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Year of Study</p>
+                      <p className="font-medium text-gray-900">Year {user.yearOfStudy}</p>
+                    </div>
+                  </div>
                 </div>
+              )}
+
+              {/* Contributor Application Section - Only for Students */}
+              {user?.role === 'student' && (
+                <div className="bg-white rounded-lg shadow-sm p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h2 className="text-xl font-bold text-gray-900">Become a Contributor</h2>
+                      <p className="text-gray-600 mt-1">
+                        Apply to manage events and create posts for your campus
+                      </p>
+                    </div>
                 {canApply && (
                   <button
-                    onClick={() => setIsModalOpen(true)}
+                    onClick={() => setIsApplyModalOpen(true)}
                     className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -256,37 +396,52 @@ export default function Profile() {
                   <p className="text-sm text-red-800">{error}</p>
                 </div>
               )}
-            </div>
-          )}
-
-          {/* Contributor/Admin Info */}
-          {(user?.role === 'contributor' || user?.role === 'admin') && (
-            <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-6">
-              <div className="flex items-center gap-3">
-                <svg className="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                <div>
-                  <h3 className="font-semibold text-gray-900">
-                    {user?.role === 'admin' ? 'Administrator Account' : 'Contributor Account'}
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    {user?.role === 'admin' 
-                      ? 'You have full access to manage the platform, users, and applications.'
-                      : 'You can create and manage events and posts for your campus.'}
-                  </p>
                 </div>
-              </div>
-            </div>
+              )}
+
+              {/* Contributor/Admin Info */}
+              {(user?.role === 'contributor' || user?.role === 'admin') && (
+                <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-6">
+                  <div className="flex items-center gap-3">
+                    <svg className="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">
+                        {user?.role === 'admin' ? 'Administrator Account' : 'Contributor Account'}
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        {user?.role === 'admin' 
+                          ? 'You have full access to manage the platform, users, and applications.'
+                          : 'You can create and manage events and posts for your campus.'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
 
-      {/* Application Modal */}
+      {/* Modals */}
       <ApplyContributorModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isApplyModalOpen}
+        onClose={() => setIsApplyModalOpen(false)}
         onSubmit={handleSubmitApplication}
+      />
+
+      <EditProfileModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        user={user}
+        onSubmit={handleUpdateProfile}
+      />
+
+      <ChangePasswordModal
+        isOpen={isPasswordModalOpen}
+        onClose={() => setIsPasswordModalOpen(false)}
+        onSubmit={handleChangePassword}
       />
     </>
   );

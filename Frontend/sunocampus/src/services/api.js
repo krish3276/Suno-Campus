@@ -316,4 +316,66 @@ export const contributorAPI = {
   },
 };
 
-export default { postsAPI, authAPI, eventsAPI, contributorAPI };
+// Profile API
+export const profileAPI = {
+  // Get current user profile
+  getProfile: async () => {
+    return apiCall('/profile');
+  },
+
+  // Update profile
+  updateProfile: async (data) => {
+    return apiCall('/profile', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  // Change password
+  changePassword: async (currentPassword, newPassword) => {
+    return apiCall('/profile/password', {
+      method: 'PUT',
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+  },
+
+  // Upload avatar
+  uploadAvatar: async (file) => {
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    return apiCall('/profile/avatar', {
+      method: 'POST',
+      body: formData,
+    });
+  },
+
+  // Delete account
+  deleteAccount: async (password) => {
+    return apiCall('/profile', {
+      method: 'DELETE',
+      body: JSON.stringify({ password }),
+    });
+  },
+
+  // Admin: Get all users
+  getAllUsers: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiCall(`/profile/users${queryString ? '?' + queryString : ''}`);
+  },
+
+  // Admin: Get user by ID
+  getUserById: async (id) => {
+    return apiCall(`/profile/user/${id}`);
+  },
+
+  // Admin: Update user by ID
+  updateUserById: async (id, data) => {
+    return apiCall(`/profile/user/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+};
+
+export default { postsAPI, authAPI, eventsAPI, contributorAPI, profileAPI };
