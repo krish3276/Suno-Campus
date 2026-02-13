@@ -62,9 +62,15 @@ export default function Login() {
       if (response.success) {
         const { user } = response.data;
         
-        // Account is verified - redirect to feed
+        // Role-based redirect
         alert(`Welcome back, ${user.fullName}!`);
-        navigate("/");
+        if (user.role === 'admin') {
+          navigate("/admin");
+        } else if (user.role === 'contributor') {
+          navigate("/contributor-dashboard");
+        } else {
+          navigate("/");
+        }
       }
     } catch (error) {
       setErrors({ submit: error.message || "Invalid email or password. Please try again." });

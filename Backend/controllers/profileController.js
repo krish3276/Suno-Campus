@@ -293,6 +293,14 @@ exports.updateUserById = async (req, res) => {
     }
 
     // Admin can update more fields including role and status
+    // But cannot promote anyone to admin — only one developer admin exists
+    if (req.body.role === "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Cannot promote users to admin. Only one developer admin is allowed.",
+      });
+    }
+
     const allowedAdminUpdates = [
       "fullName",
       "phoneNumber",

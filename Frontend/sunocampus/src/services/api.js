@@ -378,4 +378,85 @@ export const profileAPI = {
   },
 };
 
-export default { postsAPI, authAPI, eventsAPI, contributorAPI, profileAPI };
+// Admin API
+export const adminAPI = {
+  // Dashboard stats
+  getDashboardStats: async () => {
+    return apiCall('/admin/dashboard');
+  },
+
+  // User management
+  getUsers: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiCall(`/admin/users${queryString ? '?' + queryString : ''}`);
+  },
+
+  updateUser: async (id, data) => {
+    return apiCall(`/admin/users/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  deleteUser: async (id) => {
+    return apiCall(`/admin/users/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  verifyUser: async (id) => {
+    return apiCall(`/admin/users/${id}/verify`, {
+      method: 'PUT',
+    });
+  },
+
+  suspendUser: async (id) => {
+    return apiCall(`/admin/users/${id}/suspend`, {
+      method: 'PUT',
+    });
+  },
+
+  // Event management
+  getEvents: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiCall(`/admin/events${queryString ? '?' + queryString : ''}`);
+  },
+
+  toggleEvent: async (id) => {
+    return apiCall(`/admin/events/${id}/toggle`, {
+      method: 'PUT',
+    });
+  },
+
+  deleteEvent: async (id) => {
+    return apiCall(`/admin/events/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // Post management
+  getPosts: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiCall(`/admin/posts${queryString ? '?' + queryString : ''}`);
+  },
+
+  togglePost: async (id) => {
+    return apiCall(`/admin/posts/${id}/toggle`, {
+      method: 'PUT',
+    });
+  },
+
+  deletePost: async (id) => {
+    return apiCall(`/admin/posts/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  dismissReports: async (id) => {
+    return apiCall(`/admin/posts/${id}/dismiss-reports`, {
+      method: 'PUT',
+    });
+  },
+};
+
+export default { postsAPI, authAPI, eventsAPI, contributorAPI, profileAPI, adminAPI };

@@ -13,9 +13,9 @@ const Navbar = ({ user, notifications = [] }) => {
 
   // Mock user data if not provided - Replace with actual auth context
   const currentUser = user || {
-    name: 'John Doe',
-    role: 'Contributor', // 'Student', 'Contributor', 'Admin'
-    college: 'MIT',
+    fullName: 'John Doe',
+    role: 'contributor',
+    collegeName: 'MIT',
     avatar: null,
   };
 
@@ -67,13 +67,14 @@ const Navbar = ({ user, notifications = [] }) => {
 
   const canCreateEvent = ['Contributor', 'Admin'].includes(currentUser.role);
   const isAdmin = currentUser.role === 'Admin';
+  const isContributor = ['Contributor', 'Admin'].includes(currentUser.role);
 
   const navLinks = [
     { to: '/', label: 'Home', icon: '🏠', show: true },
     { to: '/events', label: 'Events', icon: '📅', show: true },
     { to: '/saved-events', label: 'Saved Events', icon: '⭐', show: true },
-    { to: '/create-event', label: 'Create Event', icon: '➕', show: canCreateEvent },
-    { to: '/admin', label: 'Admin Dashboard', icon: '⚙️', show: isAdmin },
+    { to: '/contributor', label: 'Dashboard', icon: '📊', show: isContributor },
+    { to: '/admin', label: 'Admin', icon: '⚙️', show: isAdmin },
   ].filter(link => link.show);
 
   const isActiveLink = (path) => {
@@ -81,6 +82,7 @@ const Navbar = ({ user, notifications = [] }) => {
   };
 
   const getInitials = (name) => {
+    if (!name) return '?';
     return name
       .split(' ')
       .map(n => n[0])
@@ -199,16 +201,16 @@ const Navbar = ({ user, notifications = [] }) => {
                   {currentUser.avatar ? (
                     <img
                       src={currentUser.avatar}
-                      alt={currentUser.name}
+                      alt={currentUser.fullName}
                       className="w-8 h-8 rounded-full object-cover"
                     />
                   ) : (
                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-semibold">
-                      {getInitials(currentUser.name)}
+                      {getInitials(currentUser.fullName)}
                     </div>
                   )}
                   <span className="text-sm font-medium text-gray-700 hidden sm:block">
-                    {currentUser.name.split(' ')[0]}
+                    {(currentUser.fullName || '').split(' ')[0]}
                   </span>
                   <svg className="w-4 h-4 text-gray-500 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -219,8 +221,8 @@ const Navbar = ({ user, notifications = [] }) => {
                 {isProfileDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden">
                     <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-                      <p className="text-sm font-semibold text-gray-800">{currentUser.name}</p>
-                      <p className="text-xs text-gray-500">{currentUser.college}</p>
+                      <p className="text-sm font-semibold text-gray-800">{currentUser.fullName}</p>
+                      <p className="text-xs text-gray-500">{currentUser.collegeName}</p>
                       <p className="text-xs text-blue-600 mt-1 font-medium">{currentUser.role}</p>
                     </div>
                     <div className="py-2">
