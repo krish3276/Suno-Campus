@@ -421,7 +421,7 @@ exports.getAllPosts = async (req, res) => {
     if (sort === "newest") sortOption = { createdAt: -1 };
     else if (sort === "oldest") sortOption = { createdAt: 1 };
     else if (sort === "most-liked") sortOption = { likesCount: -1 };
-    else if (sort === "most-reported") sortOption = { "reportedBy.length": -1 };
+    else if (sort === "most-reported") sortOption = { reportedByCount: -1 };
     else sortOption = { createdAt: -1 };
 
     const skip = (page - 1) * limit;

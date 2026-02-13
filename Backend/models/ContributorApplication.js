@@ -97,8 +97,7 @@ const ContributorApplicationSchema = new mongoose.Schema(
   }
 );
 
-// Indexes
-ContributorApplicationSchema.index({ userId: 1 });
+// Indexes (userId index already created by unique:true)
 ContributorApplicationSchema.index({ collegeName: 1 });
 ContributorApplicationSchema.index({ status: 1 });
 ContributorApplicationSchema.index({ createdAt: -1 });

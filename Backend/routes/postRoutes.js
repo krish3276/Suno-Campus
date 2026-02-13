@@ -16,12 +16,14 @@ const {
 
 // Public routes
 router.get("/", getPosts);
+
+// Protected routes (static paths MUST come before :id param routes)
+router.get("/user/my-posts", protect, getMyPosts);
+router.post("/", protect, authorize("contributor", "admin"), createPost);
+
+// Parameterized routes (must be after all static paths)
 router.get("/:id", getPostById);
 router.get("/:id/comments", getComments);
-
-// Protected routes
-router.post("/", protect, authorize("contributor", "admin"), createPost);
-router.get("/user/my-posts", protect, getMyPosts);
 router.post("/:id/like", protect, likePost);
 router.post("/:id/unlike", protect, unlikePost);
 router.post("/:id/comments", protect, addComment);

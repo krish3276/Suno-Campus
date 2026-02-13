@@ -2,16 +2,13 @@ const express = require("express");
 const multer = require("multer");
 const path = require("path");
 const router = express.Router();
-const { protect, authorize } = require("../middlewares/auth");
+const { protect } = require("../middlewares/auth");
 const {
   getProfile,
   updateProfile,
   changePassword,
   uploadAvatar,
   deleteAccount,
-  getUserById,
-  updateUserById,
-  getAllUsers,
 } = require("../controllers/profileController");
 
 // Configure multer for avatar uploads
@@ -51,10 +48,5 @@ router.put("/", protect, updateProfile);
 router.put("/password", protect, changePassword);
 router.post("/avatar", protect, upload.single("avatar"), uploadAvatar);
 router.delete("/", protect, deleteAccount);
-
-// Admin routes (manage other users)
-router.get("/users", protect, authorize("admin"), getAllUsers);
-router.get("/user/:id", protect, authorize("admin"), getUserById);
-router.put("/user/:id", protect, authorize("admin"), updateUserById);
 
 module.exports = router;

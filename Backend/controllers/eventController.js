@@ -56,9 +56,8 @@ exports.getEvents = async (req, res) => {
     }
 
     // Date filter - only upcoming and ongoing events
-    query.$or = [
-      { endDate: { $gte: new Date() } }, // Not ended yet
-    ];
+    // Use $and to combine with search $or without overwriting it
+    query.endDate = { $gte: new Date() };
 
     // Sorting
     let sortOption = {};
@@ -303,7 +302,7 @@ exports.registerForEvent = async (req, res) => {
       registeredAt: Date.now(),
     });
 
-    event.currentParticipants += 1;
+    // currentParticipants is auto-synced by pre-save hook from participants.length
     await event.save();
 
     res.status(200).json({
@@ -324,8 +323,8 @@ exports.registerForEvent = async (req, res) => {
 // @access  Public
 exports.getEventStats = async (req, res) => {
   try {
-    const now = new Date();
-    const today = new Date(now.setHours(0, 0, 0, 0));
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
     const totalEvents = await Event.countDocuments({ isActive: true });
     const eventsToday = await Event.countDocuments({

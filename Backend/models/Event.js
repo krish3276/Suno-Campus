@@ -142,10 +142,10 @@ EventSchema.index({ eventType: 1 });
 // Validate end date is after start date
 EventSchema.pre("save", function (next) {
   if (this.endDate <= this.startDate) {
-    next(new Error("End date must be after start date"));
+    return next(new Error("End date must be after start date"));
   }
   if (this.registrationDeadline >= this.startDate) {
-    next(new Error("Registration deadline must be before event start date"));
+    return next(new Error("Registration deadline must be before event start date"));
   }
   this.currentParticipants = this.participants.length;
   next();

@@ -72,6 +72,10 @@ const PostSchema = new mongoose.Schema(
         },
       },
     ],
+    reportedByCount: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,
@@ -88,6 +92,7 @@ PostSchema.index({ likesCount: -1 });
 PostSchema.pre("save", function (next) {
   this.likesCount = this.likes.length;
   this.commentsCount = this.comments.length;
+  this.reportedByCount = this.reportedBy.length;
   next();
 });
 

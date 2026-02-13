@@ -180,3 +180,73 @@ exports.sendWelcomeEmail = async (email, fullName) => {
     return { success: false };
   }
 };
+
+// Send password reset email
+exports.sendPasswordResetEmail = async (email, resetToken, fullName) => {
+  try {
+    const transporter = createTransporter();
+    const resetUrl = `${process.env.FRONTEND_URL || "http://localhost:5173"}/reset-password/${resetToken}`;
+
+    if (!transporter) {
+      console.log("\n" + "=".repeat(60));
+      console.log("📧 EMAIL SERVICE - DEVELOPMENT MODE");
+      console.log("=".repeat(60));
+      console.log(`To: ${email}`);
+      console.log(`Name: ${fullName}`);
+      console.log(`Subject: Password Reset Request`);
+      console.log(`\n🔗 Reset URL: ${resetUrl}`);
+      console.log(`🔑 Reset Token: ${resetToken}`);
+      console.log(`⏰ Valid for: 30 minutes`);
+      console.log("=".repeat(60) + "\n");
+      return { success: true, mode: "development" };
+    }
+
+    const mailOptions = {
+      from: `"SunoCampus" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "SunoCampus - Password Reset Request",
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+            .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+            .button { display: inline-block; padding: 14px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; margin: 15px 0; font-weight: bold; }
+            .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>🔐 Password Reset</h1>
+            </div>
+            <div class="content">
+              <h2>Hello ${fullName},</h2>
+              <p>We received a request to reset your password. Click the button below to set a new password:</p>
+              <p style="text-align:center;"><a href="${resetUrl}" class="button">Reset Password</a></p>
+              <p>Or copy and paste this link in your browser:</p>
+              <p style="word-break:break-all; background:#fff; padding:10px; border-radius:5px; font-size:14px;">${resetUrl}</p>
+              <p><strong>This link expires in 30 minutes.</strong></p>
+              <p>If you did not request a password reset, please ignore this email.</p>
+            </div>
+            <div class="footer">
+              <p>&copy; ${new Date().getFullYear()} SunoCampus. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+      text: `Hello ${fullName},\n\nWe received a request to reset your password.\n\nReset link: ${resetUrl}\n\nThis link expires in 30 minutes.\n\nIf you did not request this, please ignore this email.`,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`✅ Password reset email sent to ${email}`);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error("❌ Error sending password reset email:", error);
+    throw new Error("Failed to send password reset email");
+  }
+};

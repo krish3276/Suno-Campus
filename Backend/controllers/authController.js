@@ -1,6 +1,6 @@
 const User = require("../models/User");
 const crypto = require("crypto");
-const { sendOTPEmail, sendWelcomeEmail } = require("../services/emailService");
+const { sendOTPEmail, sendWelcomeEmail, sendPasswordResetEmail } = require("../services/emailService");
 
 // @desc    Register a new student
 // @route   POST /api/auth/register
@@ -250,6 +250,21 @@ exports.forgotPassword = async (req, res) => {
     user.resetPasswordToken = resetToken;
     user.resetPasswordExpire = Date.now() + 30 * 60 * 1000;
     await user.save();
+
+    // Send password reset email
+    try {
+      await sendPasswordResetEmail(user.email, resetToken, user.fullName);
+    } catch (emailError) {
+      console.error("Password reset email failed:", emailError);
+      // Clear reset token if email fails
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpire = undefined;
+      await user.save();
+      return res.status(500).json({
+        success: false,
+        message: "Failed to send password reset email. Please try again.",
+      });
+    }
 
     res.status(200).json({
       success: true,
