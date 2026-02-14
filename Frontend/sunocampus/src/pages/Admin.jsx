@@ -1027,7 +1027,7 @@ export default function Admin() {
   // ═══════════════════════════════════════
   return (
     <>
-      <Navbar user={currentUser} />
+      <Navbar />
       <div className="min-h-screen bg-gray-50">
         {/* Header + Tabs */}
         <div className="bg-white border-b sticky top-16 z-40">
