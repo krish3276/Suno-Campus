@@ -61,9 +61,10 @@ const Navbar = ({ notifications = [] }) => {
     logout();
   };
 
-  const canCreateEvent = isLoggedIn && ['Contributor', 'Admin'].includes(currentUser.role);
-  const isAdmin = isLoggedIn && currentUser.role === 'Admin';
-  const isContributor = isLoggedIn && ['Contributor', 'Admin'].includes(currentUser.role);
+  const userRole = isLoggedIn ? currentUser.role?.toLowerCase() : '';
+  const canCreateEvent = isLoggedIn && ['contributor', 'admin'].includes(userRole);
+  const isAdmin = userRole === 'admin';
+  const isContributor = ['contributor', 'admin'].includes(userRole);
 
   const navLinks = [
     { to: '/', label: 'Home', icon: '🏠', show: true },
