@@ -256,6 +256,25 @@ export const eventsAPI = {
       body: JSON.stringify(eventData),
     });
   },
+
+  // Save event
+  saveEvent: async (eventId) => {
+    return apiCall(`/events/${eventId}/save`, {
+      method: 'POST',
+    });
+  },
+
+  // Unsave event
+  unsaveEvent: async (eventId) => {
+    return apiCall(`/events/${eventId}/unsave`, {
+      method: 'POST',
+    });
+  },
+
+  // Get saved events
+  getSavedEvents: async () => {
+    return apiCall('/events/saved');
+  },
 };
 
 // Contributor Application API
