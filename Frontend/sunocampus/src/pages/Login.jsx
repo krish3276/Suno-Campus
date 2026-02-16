@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { authAPI } from "../services/api";
+import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -62,12 +64,15 @@ export default function Login() {
       if (response.success) {
         const { user } = response.data;
         
+        // Update auth context
+        login(user);
+        
         // Role-based redirect
         alert(`Welcome back, ${user.fullName}!`);
         if (user.role === 'admin') {
           navigate("/admin");
         } else if (user.role === 'contributor') {
-          navigate("/contributor-dashboard");
+          navigate("/contributor");
         } else {
           navigate("/");
         }

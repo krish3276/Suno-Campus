@@ -42,17 +42,17 @@ export default function Feed() {
 
   console.log('[Feed] Component rendered - Posts:', posts.length, 'Loading:', isLoading);
 
-  // Mock user data - Replace with actual auth context/API call
+  // Get user from auth context
   useEffect(() => {
-    // Simulating user data - in real app, get from auth context or localStorage
-    const mockUser = {
-      id: '1',
-      name: 'John Doe',
-      email: 'john@example.com',
-      college: 'MIT',
-      role: 'student', // Can be: 'student', 'contributor', 'admin'
-    };
-    setCurrentUser(mockUser);
+    try {
+      const stored = localStorage.getItem('user');
+      if (stored) {
+        const userData = JSON.parse(stored);
+        setCurrentUser(userData);
+      }
+    } catch {
+      setCurrentUser(null);
+    }
   }, []);
 
   // Fetch trending events and deadlines on mount
