@@ -251,9 +251,31 @@ export const eventsAPI = {
 
   // Create event (for contributors/admins)
   createEvent: async (eventData) => {
+    // Separate the banner file from the rest of the data
+    const { banner, ...fields } = eventData;
+
+    // If there's a banner image, use FormData
+    if (banner) {
+      const data = new FormData();
+      data.append('eventImage', banner);
+      Object.entries(fields).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          if (Array.isArray(value)) {
+            data.append(key, JSON.stringify(value));
+          } else {
+            data.append(key, value);
+          }
+        }
+      });
+      return apiCall('/events', {
+        method: 'POST',
+        body: data,
+      });
+    }
+
     return apiCall('/events', {
       method: 'POST',
-      body: JSON.stringify(eventData),
+      body: JSON.stringify(fields),
     });
   },
 };

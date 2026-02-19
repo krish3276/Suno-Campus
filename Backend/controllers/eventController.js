@@ -181,6 +181,7 @@ exports.createEvent = async (req, res) => {
       maxParticipants,
       registrationFee,
       tags,
+      faqs,
     } = req.body;
 
     // Validate required fields
@@ -189,6 +190,15 @@ exports.createEvent = async (req, res) => {
         success: false,
         message: "Please provide all required fields",
       });
+    }
+
+    // Handle banner image if uploaded via multer
+    const eventImage = req.file ? req.file.path : null;
+
+    // Parse tags/faqs if they were sent as JSON strings (FormData)
+    let parsedTags = tags;
+    if (typeof tags === "string") {
+      try { parsedTags = JSON.parse(tags); } catch { parsedTags = []; }
     }
 
     // Create event
@@ -207,7 +217,8 @@ exports.createEvent = async (req, res) => {
       registrationDeadline: registrationDeadline || startDate,
       maxParticipants: maxParticipants || null,
       registrationFee: registrationFee || 0,
-      tags: tags || [],
+      eventImage,
+      tags: parsedTags || [],
     });
 
     const populatedEvent = await Event.findById(event._id).populate(
